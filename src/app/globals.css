@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-slate: #424B54;
+  --color-muted-sage: #93A8AC;
+  --color-pure-white: #FFFFFF;
+  --color-dusty-rose: #E2B4BD;
+  --color-earthy-mauve: #9B6A6C;
+
+  --font-rubik: var(--font-rubik), sans-serif;
+  --font-roboto-mono: var(--font-roboto-mono), monospace;
+}
+
+:root {
+  --background: #fbfbfb;
+  --foreground: #424B54;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-rubik), sans-serif;
+}
+
+/* Micro-animations and custom effects */
+.custom-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(147, 168, 172, 0.2);
+}
+
+.pill-button {
+  @apply rounded-full border border-dark-slate py-4 px-6 text-center font-semibold text-dark-slate cursor-pointer select-none hover:bg-dark-slate hover:text-pure-white hover:shadow-lg active:scale-98;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pill-button-primary {
+  @apply rounded-full bg-earthy-mauve py-4 px-6 text-center font-semibold text-pure-white cursor-pointer select-none hover:bg-dark-slate hover:shadow-lg active:scale-98;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
