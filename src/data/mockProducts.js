@@ -124,5 +124,5 @@ export const MOCK_PRODUCTS = [
 export const PROFILE_DATA = {
   display_name: "Nabila Muchsin",
   tagline: "Where Modesty Meets Class.",
-  avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
+  avatar_url: "/kakila_photo.jpg"
 };

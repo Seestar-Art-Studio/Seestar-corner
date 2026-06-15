@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MOCK_PRODUCTS } from "@/data/mockProducts";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function AdminDashboard() {
   // Authentication State
@@ -20,23 +21,47 @@ export default function AdminDashboard() {
 
   // Check custom secret link bypass on mount
   useEffect(() => {
+    const validKeys = ["kakila2026", "nabila-muchsin"];
     const storedKey = localStorage.getItem("kakila_admin_key");
     const urlParams = new URLSearchParams(window.location.search);
     const urlKey = urlParams.get("key");
 
-    if (urlKey === "kakila2026") {
-      localStorage.setItem("kakila_admin_key", "kakila2026");
+    if (urlKey && validKeys.includes(urlKey)) {
+      localStorage.setItem("kakila_admin_key", urlKey);
       setIsAuthenticated(true);
       // Remove query parameter from URL bar for clean appearance
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (storedKey === "kakila2026") {
+    } else if (storedKey && validKeys.includes(storedKey)) {
       setIsAuthenticated(true);
     }
     setIsCheckingAuth(false);
   }, []);
 
+  // Fetch products from Supabase
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        if (data) {
+          setProducts(data);
+        }
+      } catch (err) {
+        console.error("Error fetching products in Admin:", err);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   // Save Product Handler
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!productCode || !productName || !linkUrl) {
       alert("Harap isi seluruh field formulir!");
@@ -45,35 +70,93 @@ export default function AdminDashboard() {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const newProduct = {
-        id: `prod-${Date.now()}`,
-        platform,
-        product_code: productCode.toUpperCase(),
-        title: productName,
-        image_url: imageUrl || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600",
-        redirect_url: linkUrl,
-        is_active: true,
-        created_at: new Date().toISOString()
-      };
+    const imgUrl = imageUrl || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600";
 
-      setProducts([newProduct, ...products]);
-      setSuccessMessage("Produk berhasil ditambahkan!");
-      
-      // Reset form
-      setProductCode("");
-      setProductName("");
-      setLinkUrl("");
-      setImageUrl("");
-      setIsSubmitting(false);
+    if (isSupabaseConfigured) {
+      try {
+        const newProduct = {
+          platform,
+          product_code: productCode.toUpperCase(),
+          title: productName,
+          image_url: imgUrl,
+          redirect_url: linkUrl,
+          is_active: true
+        };
 
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }, 600);
+        const { data, error } = await supabase
+          .from("products")
+          .insert([newProduct])
+          .select();
+
+        if (error) throw error;
+
+        if (data && data[0]) {
+          setProducts([data[0], ...products]);
+          setSuccessMessage("Produk berhasil disimpan ke database!");
+          
+          // Reset form
+          setProductCode("");
+          setProductName("");
+          setLinkUrl("");
+          setImageUrl("");
+        }
+      } catch (err) {
+        console.error("Error saving product to Supabase:", err);
+        alert(`Gagal menyimpan produk ke database: ${err.message || err}`);
+      } finally {
+        setIsSubmitting(false);
+        setTimeout(() => setSuccessMessage(""), 3000);
+      }
+    } else {
+      // Fallback local save for testing when Supabase env variables are missing
+      setTimeout(() => {
+        const newProduct = {
+          id: `prod-${Date.now()}`,
+          platform,
+          product_code: productCode.toUpperCase(),
+          title: productName,
+          image_url: imgUrl,
+          redirect_url: linkUrl,
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+
+        setProducts([newProduct, ...products]);
+        setSuccessMessage("Produk berhasil ditambahkan (Mock)!");
+        
+        // Reset form
+        setProductCode("");
+        setProductName("");
+        setLinkUrl("");
+        setImageUrl("");
+        setIsSubmitting(false);
+
+        setTimeout(() => setSuccessMessage(""), 3000);
+      }, 600);
+    }
   };
 
   // Delete product
-  const handleDelete = (id) => {
-    if (confirm("Apakah Anda yakin ingin menghapus produk ini dari katalog?")) {
+  const handleDelete = async (id) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus produk ini dari katalog?")) {
+      return;
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase
+          .from("products")
+          .delete()
+          .eq("id", id);
+
+        if (error) throw error;
+
+        setProducts(products.filter((p) => p.id !== id));
+      } catch (err) {
+        console.error("Error deleting product from Supabase:", err);
+        alert(`Gagal menghapus produk: ${err.message || err}`);
+      }
+    } else {
       setProducts(products.filter((p) => p.id !== id));
     }
   };
@@ -170,7 +253,7 @@ export default function AdminDashboard() {
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-full bg-earthy-mauve/25 overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
+                src="/kakila_photo.jpg"
                 alt="Nabila Muchsin"
                 className="w-full h-full object-cover"
               />
@@ -232,7 +315,7 @@ export default function AdminDashboard() {
                       key={p.key}
                       className={`flex items-center justify-center py-3 rounded-xl border text-xs font-bold cursor-pointer select-none custom-transition ${
                         platform === p.key
-                          ? "border-earthy-mauve bg-earthy-mauve/5 text-earthy-mauve font-extrabold shadow-xs"
+                          ? "border-earthy-mauve bg-earthy-mauve text-pure-white font-extrabold shadow-xs"
                           : "border-muted-sage/25 hover:border-dark-slate text-muted-sage"
                       }`}
                     >
@@ -367,7 +450,7 @@ export default function AdminDashboard() {
                 <div className="text-center mb-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-dusty-rose p-0.5 mx-auto mb-1">
                     <img
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
+                      src="/kakila_photo.jpg"
                       alt="Nabila Muchsin"
                       className="w-full h-full object-cover rounded-full"
                     />

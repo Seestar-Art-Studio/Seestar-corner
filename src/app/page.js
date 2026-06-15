@@ -1,14 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MOCK_PRODUCTS, PROFILE_DATA } from "@/data/mockProducts";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function Home() {
   const [activePhase, setActivePhase] = useState("LINK_TREE"); // 'LINK_TREE' | 'CATALOG'
   const [selectedPlatform, setSelectedPlatform] = useState("SHOPEE"); // 'SHOPEE' | 'TIKTOK' | 'EBOOK'
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 8; // Shows pagination beautifully
+
+  // Fetch products from Supabase
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        if (data) {
+          setProducts(data);
+        }
+      } catch (err) {
+        console.error("Error fetching products from Supabase:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Handler to navigate to Catalog
   const openCatalog = (platform) => {
@@ -19,7 +48,7 @@ export default function Home() {
   };
 
   // Filter products based on platform and search query (matches code or title)
-  const filteredProducts = MOCK_PRODUCTS.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     const matchesPlatform = product.platform === selectedPlatform;
     const matchesSearch =
       searchQuery.trim() === "" ||
@@ -96,11 +125,7 @@ export default function Home() {
             {/* Linktree Footer */}
             <div className="w-full border-t border-muted-sage/10 pt-4 flex items-center justify-between text-[11px] text-muted-sage">
               <span>{PROFILE_DATA.display_name}</span>
-              <div className="space-x-3">
-                <a href="/admin" className="hover:underline hover:text-earthy-mauve">Admin Dashboard</a>
-                <span>•</span>
-                <span>Copyright © 2026</span>
-              </div>
+              <span>Copyright © 2026</span>
             </div>
           </div>
         </div>
@@ -307,25 +332,14 @@ export default function Home() {
 
           {/* Full-Width Footer Section */}
           <footer className="bg-dark-slate text-pure-white pt-12 pb-6 px-6 mt-16 border-t border-muted-sage/15">
-            <div className="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-muted-sage/10">
-              
-              {/* Left Column (Brand Bio) */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-earthy-mauve flex items-center justify-center font-bold text-lg text-pure-white">
-                    N
-                  </div>
-                  <h3 className="font-bold text-xl font-rubik tracking-wide">Nabila Muchsin</h3>
-                </div>
-              </div>
-
-              {/* Right Column (Links) */}
-              <div className="grid grid-cols-2 gap-4">
+            <div className="max-w-7xl w-full mx-auto mb-8 pb-8 border-b border-muted-sage/10">
+              {/* Columns */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div>
                   <h4 className="text-xs font-bold text-dusty-rose uppercase tracking-wider mb-3">Links</h4>
                   <ul className="space-y-2 text-sm text-muted-sage">
                     <li>
-                      <button onClick={() => { setSelectedPlatform("SHOPEE"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">Shopee Shop</button>
+                      <button onClick={() => { setSelectedPlatform("SHOPEE"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">Shopee</button>
                     </li>
                     <li>
                       <button onClick={() => { setSelectedPlatform("TIKTOK"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">TikTok Shop</button>
@@ -344,13 +358,9 @@ export default function Home() {
                     <li>
                       <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="hover:text-pure-white transition-colors">TikTok</a>
                     </li>
-                    <li>
-                      <a href="/admin" className="hover:text-pure-white transition-colors font-semibold underline underline-offset-4 decoration-earthy-mauve">Admin Panel</a>
-                    </li>
                   </ul>
                 </div>
               </div>
-
             </div>
 
             {/* Bottom Row */}
