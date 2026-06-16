@@ -16,8 +16,31 @@ export default function AdminDashboard() {
   const [productName, setProductName] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran gambar terlalu besar! Maksimal 2MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageUrl(reader.result);
+      setIsUploading(false);
+    };
+    reader.onerror = () => {
+      alert("Gagal membaca berkas gambar.");
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Check custom secret link bypass on mount
   useEffect(() => {
@@ -397,13 +420,27 @@ export default function AdminDashboard() {
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-sage mb-1.5">
                   Unggah Gambar Produk
                 </label>
-                <div className="border-2 border-dashed border-muted-sage/35 hover:border-earthy-mauve/50 rounded-xl p-5 text-center bg-[#fbfcfc] cursor-pointer custom-transition flex flex-col items-center">
+                <label 
+                  htmlFor="product-image-upload"
+                  className="border-2 border-dashed border-muted-sage/35 hover:border-earthy-mauve/50 rounded-xl p-5 text-center bg-[#fbfcfc] cursor-pointer custom-transition flex flex-col items-center block"
+                >
+                  <input
+                    id="product-image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
                   <svg className="w-7 h-7 text-muted-sage mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
-                  <p className="text-xs font-bold text-dark-slate">Click or drag file to this area to upload</p>
-                  <p className="text-[10px] text-muted-sage mt-0.5">Mendukung format PNG atau JPG hingga 2MB</p>
-                </div>
+                  <p className="text-xs font-bold text-dark-slate">
+                    {isUploading ? "Membaca gambar..." : "Klik untuk pilih foto dari galeri"}
+                  </p>
+                  <p className="text-[10px] text-muted-sage mt-0.5">
+                    {imageUrl && imageUrl.startsWith("data:") ? "✓ Gambar galeri berhasil dimuat" : "Mendukung format PNG atau JPG hingga 2MB"}
+                  </p>
+                </label>
               </div>
 
               {/* Form Actions */}
