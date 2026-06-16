@@ -13,7 +13,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata = {
   title: "Kakila - Link Aggregator & Product Catalog",
-  description: "Temukan produk Shopee, TikTok Shop, dan E-Book eksklusif dari Nabila Muchsin. Where Modesty Meets Class.",
+  description: "Temukan produk Shopee, TikTok Shop, dan E-Book eksklusif dari Nabila Muchsin.",
 };
 
 export default function RootLayout({ children }) {

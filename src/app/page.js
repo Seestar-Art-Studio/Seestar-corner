@@ -70,7 +70,7 @@ export default function Home() {
       {activePhase === "LINK_TREE" && (
         <div className="flex-1 flex flex-col items-center justify-center py-16 px-4">
           <div className="w-full max-w-md bg-pure-white rounded-3xl shadow-xl p-8 border border-muted-sage/20 text-center flex flex-col items-center">
-            
+
             {/* Welcome Tag */}
             <p className="text-xs uppercase tracking-widest text-muted-sage font-bold mb-8">
               Selamat Datang
@@ -147,7 +147,7 @@ export default function Home() {
                 Kembali
               </button>
             </div>
-            
+
             <h1 className="text-3xl md:text-4xl font-bold font-rubik tracking-tight mb-2">
               {PROFILE_DATA.display_name}
             </h1>
@@ -198,11 +198,10 @@ export default function Home() {
                   setSearchQuery("");
                   setCurrentPage(1);
                 }}
-                className={`px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider custom-transition cursor-pointer ${
-                  selectedPlatform === plat
-                    ? "bg-earthy-mauve text-pure-white shadow-xs font-bold"
-                    : "text-muted-sage hover:text-dark-slate hover:bg-neutral-50"
-                }`}
+                className={`px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider custom-transition cursor-pointer ${selectedPlatform === plat
+                  ? "bg-earthy-mauve text-pure-white shadow-xs font-bold"
+                  : "text-muted-sage hover:text-dark-slate hover:bg-neutral-50"
+                  }`}
               >
                 {plat === "SHOPEE" ? "Shopee" : "TikTok Shop"}
               </button>
@@ -211,7 +210,7 @@ export default function Home() {
 
           {/* Catalog Body Content */}
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-10 md:py-14">
-            
+
             {/* Selamat Datang Header inside grid view */}
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-muted-sage/15 pb-4">
               <div>
@@ -278,25 +277,23 @@ export default function Home() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className={`w-9 h-9 rounded-lg border border-muted-sage/20 flex items-center justify-center custom-transition cursor-pointer ${
-                        currentPage === 1
-                          ? "text-muted-sage/40 cursor-not-allowed"
-                          : "text-dark-slate hover:border-earthy-mauve hover:bg-earthy-mauve/5"
-                      }`}
+                      className={`w-9 h-9 rounded-lg border border-muted-sage/20 flex items-center justify-center custom-transition cursor-pointer ${currentPage === 1
+                        ? "text-muted-sage/40 cursor-not-allowed"
+                        : "text-dark-slate hover:border-earthy-mauve hover:bg-earthy-mauve/5"
+                        }`}
                     >
                       &lt;
                     </button>
-                    
+
                     {/* Page Numbers */}
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-9 h-9 rounded-lg border text-xs font-bold font-roboto-mono custom-transition cursor-pointer ${
-                          currentPage === page
-                            ? "bg-earthy-mauve border-earthy-mauve text-pure-white shadow-xs"
-                            : "border-muted-sage/20 text-muted-sage hover:border-dark-slate hover:text-dark-slate"
-                        }`}
+                        className={`w-9 h-9 rounded-lg border text-xs font-bold font-roboto-mono custom-transition cursor-pointer ${currentPage === page
+                          ? "bg-earthy-mauve border-earthy-mauve text-pure-white shadow-xs"
+                          : "border-muted-sage/20 text-muted-sage hover:border-dark-slate hover:text-dark-slate"
+                          }`}
                       >
                         {page}
                       </button>
@@ -306,11 +303,10 @@ export default function Home() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className={`w-9 h-9 rounded-lg border border-muted-sage/20 flex items-center justify-center custom-transition cursor-pointer ${
-                        currentPage === totalPages
-                          ? "text-muted-sage/40 cursor-not-allowed"
-                          : "text-dark-slate hover:border-earthy-mauve hover:bg-earthy-mauve/5"
-                      }`}
+                      className={`w-9 h-9 rounded-lg border border-muted-sage/20 flex items-center justify-center custom-transition cursor-pointer ${currentPage === totalPages
+                        ? "text-muted-sage/40 cursor-not-allowed"
+                        : "text-dark-slate hover:border-earthy-mauve hover:bg-earthy-mauve/5"
+                        }`}
                     >
                       &gt;
                     </button>

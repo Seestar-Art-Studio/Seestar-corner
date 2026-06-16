@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-dark-slate: #424B54;
+  --color-dark-slate: #203337;
   --color-muted-sage: #93A8AC;
   --color-pure-white: #FFFFFF;
   --color-dusty-rose: #E2B4BD;
@@ -13,7 +13,7 @@
 
 :root {
   --background: #fbfbfb;
-  --foreground: #424B54;
+  --foreground: #203337;
 }
 
 body {
