@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { MOCK_PRODUCTS } from "@/data/mockProducts";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [editingProduct, setEditingProduct] = useState(null);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -42,6 +44,18 @@ export default function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    setPlatform(product.platform);
+    setProductCode(product.product_code);
+    setProductName(product.title);
+    setLinkUrl(product.redirect_url);
+    setImageUrl(product.image_url === "/default_preview.jpg" ? "" : product.image_url);
+    
+    // Scroll smoothly to form section on top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Check custom secret link bypass on mount
   useEffect(() => {
     const validKeys = ["kakila2026", "nabila-muchsin"];
@@ -49,15 +63,21 @@ export default function AdminDashboard() {
     const urlParams = new URLSearchParams(window.location.search);
     const urlKey = urlParams.get("key");
 
+    let authenticated = false;
     if (urlKey && validKeys.includes(urlKey)) {
       localStorage.setItem("kakila_admin_key", urlKey);
-      setIsAuthenticated(true);
+      authenticated = true;
       // Remove query parameter from URL bar for clean appearance
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (storedKey && validKeys.includes(storedKey)) {
-      setIsAuthenticated(true);
+      authenticated = true;
     }
-    setIsCheckingAuth(false);
+    
+    // Defer state update to avoid synchronous setState inside useEffect warning
+    setTimeout(() => {
+      setIsAuthenticated(authenticated);
+      setIsCheckingAuth(false);
+    }, 0);
   }, []);
 
   // Fetch products from Supabase
@@ -95,31 +115,64 @@ export default function AdminDashboard() {
 
     if (isSupabaseConfigured) {
       try {
-        const newProduct = {
-          platform,
-          product_code: productCode.toUpperCase(),
-          title: productName,
-          image_url: imgUrl,
-          redirect_url: linkUrl,
-          is_active: true
-        };
+        if (editingProduct) {
+          // UPDATE MODE
+          const updatedProduct = {
+            platform,
+            product_code: productCode.toUpperCase(),
+            title: productName,
+            image_url: imgUrl,
+            redirect_url: linkUrl,
+            is_active: editingProduct.is_active
+          };
 
-        const { data, error } = await supabase
-          .from("products")
-          .insert([newProduct])
-          .select();
+          const { data, error } = await supabase
+            .from("products")
+            .update(updatedProduct)
+            .eq("id", editingProduct.id)
+            .select();
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (data && data[0]) {
-          setProducts([data[0], ...products]);
-          setSuccessMessage("Produk berhasil disimpan ke database!");
-          
-          // Reset form
-          setProductCode("");
-          setProductName("");
-          setLinkUrl("");
-          setImageUrl("");
+          if (data && data[0]) {
+            setProducts(products.map((p) => (p.id === editingProduct.id ? data[0] : p)));
+            setSuccessMessage("Produk berhasil diperbarui di database!");
+            
+            // Reset form
+            setProductCode("");
+            setProductName("");
+            setLinkUrl("");
+            setImageUrl("");
+            setEditingProduct(null);
+          }
+        } else {
+          // INSERT MODE
+          const newProduct = {
+            platform,
+            product_code: productCode.toUpperCase(),
+            title: productName,
+            image_url: imgUrl,
+            redirect_url: linkUrl,
+            is_active: true
+          };
+
+          const { data, error } = await supabase
+            .from("products")
+            .insert([newProduct])
+            .select();
+
+          if (error) throw error;
+
+          if (data && data[0]) {
+            setProducts([data[0], ...products]);
+            setSuccessMessage("Produk berhasil disimpan ke database!");
+            
+            // Reset form
+            setProductCode("");
+            setProductName("");
+            setLinkUrl("");
+            setImageUrl("");
+          }
         }
       } catch (err) {
         console.error("Error saving product to Supabase:", err);
@@ -131,27 +184,47 @@ export default function AdminDashboard() {
     } else {
       // Fallback local save for testing when Supabase env variables are missing
       setTimeout(() => {
-        const newProduct = {
-          id: `prod-${Date.now()}`,
-          platform,
-          product_code: productCode.toUpperCase(),
-          title: productName,
-          image_url: imgUrl,
-          redirect_url: linkUrl,
-          is_active: true,
-          created_at: new Date().toISOString()
-        };
+        if (editingProduct) {
+          // UPDATE MODE (MOCK)
+          const updatedProduct = {
+            ...editingProduct,
+            platform,
+            product_code: productCode.toUpperCase(),
+            title: productName,
+            image_url: imgUrl,
+            redirect_url: linkUrl
+          };
 
-        setProducts([newProduct, ...products]);
-        setSuccessMessage("Produk berhasil ditambahkan (Mock)!");
-        
-        // Reset form
-        setProductCode("");
-        setProductName("");
-        setLinkUrl("");
-        setImageUrl("");
+          setProducts(products.map((p) => (p.id === editingProduct.id ? updatedProduct : p)));
+          setSuccessMessage("Produk berhasil diperbarui (Mock)!");
+          
+          setProductCode("");
+          setProductName("");
+          setLinkUrl("");
+          setImageUrl("");
+          setEditingProduct(null);
+        } else {
+          // INSERT MODE (MOCK)
+          const newProduct = {
+            id: `prod-${Date.now()}`,
+            platform,
+            product_code: productCode.toUpperCase(),
+            title: productName,
+            image_url: imgUrl,
+            redirect_url: linkUrl,
+            is_active: true,
+            created_at: new Date().toISOString()
+          };
+
+          setProducts([newProduct, ...products]);
+          setSuccessMessage("Produk berhasil ditambahkan (Mock)!");
+          
+          setProductCode("");
+          setProductName("");
+          setLinkUrl("");
+          setImageUrl("");
+        }
         setIsSubmitting(false);
-
         setTimeout(() => setSuccessMessage(""), 3000);
       }, 600);
     }
@@ -188,6 +261,7 @@ export default function AdminDashboard() {
     setProductName("");
     setLinkUrl("");
     setImageUrl("");
+    setEditingProduct(null);
   };
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -235,12 +309,12 @@ export default function AdminDashboard() {
             <h2 className="text-sm font-normal leading-7">This page could not be found.</h2>
           </div>
         </div>
-        <a 
+        <Link 
           href="/" 
           className="mt-6 text-xs text-neutral-500 hover:text-black underline underline-offset-4 custom-transition"
         >
           Kembali ke Beranda
-        </a>
+        </Link>
       </div>
     );
   }
@@ -286,7 +360,7 @@ export default function AdminDashboard() {
               </svg>
               <span>Inventory List</span>
             </a>
-            <a
+            <Link
               href="/"
               onClick={() => setIsMenuOpen(false)}
               className="flex items-center space-x-3 px-4 py-3 rounded-xl text-muted-sage hover:bg-white/5 hover:text-pure-white font-medium transition-colors"
@@ -295,7 +369,7 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span>Lihat Landing Page</span>
-            </a>
+            </Link>
             <button
               onClick={handleLogout}
               className="md:hidden flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-muted-sage hover:bg-white/5 hover:text-pure-white font-medium transition-colors cursor-pointer"
@@ -336,12 +410,14 @@ export default function AdminDashboard() {
       </aside>
 
       {/* B. Main Area */}
-      <main className="flex-1 p-6 md:p-10 flex flex-col md:overflow-y-auto md:max-h-screen">
+      <main className="flex-1 p-6 md:p-10 flex flex-col pb-24">
         
         {/* Top Header */}
         <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-dark-slate">Tambah Produk Baru</h2>
+            <h2 className="text-2xl font-bold text-dark-slate">
+              {editingProduct ? `Edit Produk: ${editingProduct.title}` : "Tambah Produk Baru"}
+            </h2>
             <p className="text-xs text-muted-sage mt-0.5">Kelola data item yang akan ditampilkan ke katalog Landing Page.</p>
           </div>
           {successMessage && (
@@ -489,7 +565,11 @@ export default function AdminDashboard() {
                     isSubmitting ? "bg-muted-sage cursor-not-allowed" : "bg-earthy-mauve hover:bg-dark-slate shadow-md"
                   }`}
                 >
-                  {isSubmitting ? "Menyimpan..." : "Simpan Produk"}
+                  {isSubmitting
+                    ? "Menyimpan..."
+                    : editingProduct
+                    ? "Perbarui Produk"
+                    : "Simpan Produk"}
                 </button>
                 <button
                   type="button"
@@ -576,6 +656,14 @@ export default function AdminDashboard() {
 
         </div>
 
+        {/* Celah warna putih dekoratif sebelum katalog terdaftar */}
+        <div className="w-full h-8 bg-pure-white rounded-2xl mb-8 shadow-xs border border-muted-sage/10 flex items-center px-6">
+          <div className="flex items-center space-x-2 text-[10px] font-bold text-earthy-mauve uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-earthy-mauve animate-pulse"></span>
+            <span>Daftar Katalog Produk</span>
+          </div>
+        </div>
+
         {/* 3. Bottom Row: Registered Products List */}
         <section className="bg-pure-white border border-muted-sage/20 rounded-2xl shadow-xs overflow-hidden">
           <div className="px-6 py-5 border-b border-muted-sage/10 flex items-center justify-between">
@@ -640,7 +728,13 @@ export default function AdminDashboard() {
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3 px-6 text-right">
+                    <td className="py-3 px-6 text-right space-x-3">
+                      <button
+                        onClick={() => handleEdit(p)}
+                        className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => handleDelete(p.id)}
                         className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
