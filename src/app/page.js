@@ -7,11 +7,27 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 export default function Home() {
   const [activePhase, setActivePhase] = useState("LINK_TREE"); // 'LINK_TREE' | 'CATALOG'
   const [selectedPlatform, setSelectedPlatform] = useState("SHOPEE"); // 'SHOPEE' | 'TIKTOK' | 'EBOOK'
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 8; // Shows pagination beautifully
+
+  // Helper to parse category from title [Category] Clean Title
+  const parseProductTitle = (fullTitle) => {
+    const match = fullTitle.match(/^\[(.*?)\]\s*(.*)$/);
+    if (match) {
+      return {
+        category: match[1].trim(),
+        cleanTitle: match[2].trim()
+      };
+    }
+    return {
+      category: "Lainnya",
+      cleanTitle: fullTitle
+    };
+  };
 
   // Fetch products from Supabase
   useEffect(() => {
@@ -42,19 +58,36 @@ export default function Home() {
   // Handler to navigate to Catalog
   const openCatalog = (platform) => {
     setSelectedPlatform(platform);
+    setSelectedCategory("Semua");
     setSearchQuery("");
     setCurrentPage(1);
     setActivePhase("CATALOG");
   };
 
-  // Filter products based on platform and search query (matches code or title)
-  const filteredProducts = products.filter((product) => {
-    const matchesPlatform = product.platform === selectedPlatform;
+  // Get all active products for the current platform
+  const platformProducts = products.filter(
+    (product) => product.platform === selectedPlatform && product.is_active
+  );
+
+  // Generate unique categories list for the current platform's active products
+  const categoriesList = [
+    "Semua",
+    ...Array.from(
+      new Set(
+        platformProducts.map((p) => parseProductTitle(p.title).category)
+      )
+    )
+  ];
+
+  // Filter products based on platform, category and search query (matches code or clean title)
+  const filteredProducts = platformProducts.filter((product) => {
+    const { category, cleanTitle } = parseProductTitle(product.title);
+    const matchesCategory = selectedCategory === "Semua" || category === selectedCategory;
     const matchesSearch =
       searchQuery.trim() === "" ||
       product.product_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.title.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesPlatform && matchesSearch && product.is_active;
+      cleanTitle.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
   });
 
   // Pagination Logic
@@ -195,6 +228,7 @@ export default function Home() {
                 key={plat}
                 onClick={() => {
                   setSelectedPlatform(plat);
+                  setSelectedCategory("Semua");
                   setSearchQuery("");
                   setCurrentPage(1);
                 }}
@@ -221,53 +255,90 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Category Filter Scrollable Row */}
+            <div className="mb-8 overflow-x-auto pb-2 -mx-4 px-4 flex items-center space-x-2 scrollbar-none">
+              {categoriesList.map((cat) => {
+                // Count items in this category for the current platform/search
+                const catCount = platformProducts.filter(p => {
+                  const parsed = parseProductTitle(p.title);
+                  return (cat === "Semua" || parsed.category === cat) && 
+                         (searchQuery.trim() === "" || 
+                          p.product_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          parsed.cleanTitle.toLowerCase().includes(searchQuery.toLowerCase()));
+                }).length;
+
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      setCurrentPage(1);
+                    }}
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold custom-transition cursor-pointer select-none ${
+                      selectedCategory === cat
+                        ? "bg-earthy-mauve text-pure-white shadow-sm font-bold"
+                        : "bg-pure-white text-muted-sage hover:text-dark-slate border border-muted-sage/20 hover:border-muted-sage/45"
+                    }`}
+                  >
+                    {cat} <span className="text-[10px] ml-1 opacity-70">({catCount})</span>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Product Grid Area (4 columns on desktop, 2 columns on mobile) */}
             {paginatedProducts.length > 0 ? (
               <div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {paginatedProducts.map((product) => (
-                    <a
-                      key={product.id}
-                      href={product.redirect_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group bg-pure-white border border-muted-sage/20 rounded-2xl overflow-hidden hover:shadow-lg hover:border-earthy-mauve/30 transform hover:-translate-y-1 custom-transition flex flex-col"
-                    >
-                      {/* Image container aspect square */}
-                      <div className="relative aspect-square bg-neutral-100 overflow-hidden w-full">
-                        <img
-                          src={product.image_url}
-                          alt={product.title}
-                          className="w-full h-full object-cover custom-transition group-hover:scale-105"
-                          loading="lazy"
-                        />
-                        {/* Overlay Category badge */}
-                        <div className="absolute top-3 left-3 bg-pure-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[9px] font-extrabold text-earthy-mauve shadow-xs uppercase">
-                          {product.platform === "EBOOK" ? "Book" : product.platform}
+                  {paginatedProducts.map((product) => {
+                    const { category, cleanTitle } = parseProductTitle(product.title);
+                    return (
+                      <a
+                        key={product.id}
+                        href={product.redirect_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group bg-pure-white border border-muted-sage/20 rounded-2xl overflow-hidden hover:shadow-lg hover:border-earthy-mauve/30 transform hover:-translate-y-1 custom-transition flex flex-col"
+                      >
+                        {/* Image container aspect square */}
+                        <div className="relative aspect-square bg-neutral-100 overflow-hidden w-full">
+                          <img
+                            src={product.image_url}
+                            alt={cleanTitle}
+                            className="w-full h-full object-cover custom-transition group-hover:scale-105"
+                            loading="lazy"
+                          />
+                          {/* Overlay Category badge */}
+                          <div className="absolute top-3 left-3 bg-pure-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[9px] font-extrabold text-earthy-mauve shadow-xs uppercase">
+                            {product.platform === "EBOOK" ? "Book" : product.platform}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Content Area */}
-                      <div className="p-4 flex-1 flex flex-col justify-between">
-                        <div>
-                          <h3 className="text-sm font-semibold font-rubik text-dark-slate leading-snug line-clamp-2 mb-2 group-hover:text-earthy-mauve custom-transition">
-                            {product.title}
-                          </h3>
+                        {/* Content Area */}
+                        <div className="p-4 flex-1 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-muted-sage font-extrabold block mb-1">
+                              {category}
+                            </span>
+                            <h3 className="text-sm font-semibold font-rubik text-dark-slate leading-snug line-clamp-2 mb-2 group-hover:text-earthy-mauve custom-transition">
+                              {cleanTitle}
+                            </h3>
+                          </div>
+                          <div className="pt-3 flex items-center justify-between border-t border-muted-sage/10 mt-2">
+                            <span className="text-xs font-roboto-mono text-earthy-mauve font-bold">
+                              Kode: {product.product_code}
+                            </span>
+                            <span className="text-xs font-semibold font-rubik text-muted-sage group-hover:text-dark-slate flex items-center">
+                              Beli Sekarang
+                              <svg className="w-3 h-3 ml-1 transform group-hover:translate-x-0.5 custom-transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </span>
+                          </div>
                         </div>
-                        <div className="pt-3 flex items-center justify-between border-t border-muted-sage/10 mt-2">
-                          <span className="text-xs font-roboto-mono text-earthy-mauve font-bold">
-                            Kode: {product.product_code}
-                          </span>
-                          <span className="text-xs font-semibold font-rubik text-muted-sage group-hover:text-dark-slate flex items-center">
-                            Beli Sekarang
-                            <svg className="w-3 h-3 ml-1 transform group-hover:translate-x-0.5 custom-transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </span>
-                        </div>
-                      </div>
-                    </a>
-                  ))}
+                      </a>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination Controls */}

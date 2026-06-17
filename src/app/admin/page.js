@@ -22,6 +22,35 @@ export default function AdminDashboard() {
   const [successMessage, setSuccessMessage] = useState("");
   const [editingProduct, setEditingProduct] = useState(null);
 
+  // Category States & Helpers
+  const DEFAULT_CATEGORIES = ["Gamis", "Hijab", "Tas", "Rok", "Tunik", "Kemeja", "Alat Masak", "Bumbu Masak", "Lainnya"];
+  const [category, setCategory] = useState("Gamis");
+  const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [customCategories, setCustomCategories] = useState([]);
+
+  // Helper to parse category from title [Category] Clean Title
+  const parseProductTitle = (fullTitle) => {
+    const match = fullTitle.match(/^\[(.*?)\]\s*(.*)$/);
+    if (match) {
+      return {
+        category: match[1].trim(),
+        cleanTitle: match[2].trim()
+      };
+    }
+    return {
+      category: "Lainnya",
+      cleanTitle: fullTitle
+    };
+  };
+
+  // Sync custom categories based on loaded products
+  useEffect(() => {
+    const existingCats = products.map(p => parseProductTitle(p.title).category);
+    const uniqueExisting = existingCats.filter(cat => !DEFAULT_CATEGORIES.includes(cat));
+    setCustomCategories(Array.from(new Set(uniqueExisting)));
+  }, [products]);
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -45,10 +74,14 @@ export default function AdminDashboard() {
   };
 
   const handleEdit = (product) => {
+    const parsed = parseProductTitle(product.title);
     setEditingProduct(product);
     setPlatform(product.platform);
     setProductCode(product.product_code);
-    setProductName(product.title);
+    setProductName(parsed.cleanTitle);
+    setCategory(parsed.category);
+    setNewCategoryInput("");
+    setShowNewCategoryInput(false);
     setLinkUrl(product.redirect_url);
     setImageUrl(product.image_url === "/default_preview.jpg" ? "" : product.image_url);
     
@@ -113,6 +146,11 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
     const imgUrl = imageUrl || "/default_preview.jpg";
 
+    const finalCategory = showNewCategoryInput && newCategoryInput.trim() !== ""
+      ? newCategoryInput.trim()
+      : category;
+    const formattedTitle = `[${finalCategory}] ${productName}`;
+
     if (isSupabaseConfigured) {
       try {
         if (editingProduct) {
@@ -120,7 +158,7 @@ export default function AdminDashboard() {
           const updatedProduct = {
             platform,
             product_code: productCode.toUpperCase(),
-            title: productName,
+            title: formattedTitle,
             image_url: imgUrl,
             redirect_url: linkUrl,
             is_active: editingProduct.is_active
@@ -143,6 +181,9 @@ export default function AdminDashboard() {
             setProductName("");
             setLinkUrl("");
             setImageUrl("");
+            setCategory("Gamis");
+            setNewCategoryInput("");
+            setShowNewCategoryInput(false);
             setEditingProduct(null);
           }
         } else {
@@ -150,7 +191,7 @@ export default function AdminDashboard() {
           const newProduct = {
             platform,
             product_code: productCode.toUpperCase(),
-            title: productName,
+            title: formattedTitle,
             image_url: imgUrl,
             redirect_url: linkUrl,
             is_active: true
@@ -172,6 +213,9 @@ export default function AdminDashboard() {
             setProductName("");
             setLinkUrl("");
             setImageUrl("");
+            setCategory("Gamis");
+            setNewCategoryInput("");
+            setShowNewCategoryInput(false);
           }
         }
       } catch (err) {
@@ -190,7 +234,7 @@ export default function AdminDashboard() {
             ...editingProduct,
             platform,
             product_code: productCode.toUpperCase(),
-            title: productName,
+            title: formattedTitle,
             image_url: imgUrl,
             redirect_url: linkUrl
           };
@@ -202,6 +246,9 @@ export default function AdminDashboard() {
           setProductName("");
           setLinkUrl("");
           setImageUrl("");
+          setCategory("Gamis");
+          setNewCategoryInput("");
+          setShowNewCategoryInput(false);
           setEditingProduct(null);
         } else {
           // INSERT MODE (MOCK)
@@ -209,7 +256,7 @@ export default function AdminDashboard() {
             id: `prod-${Date.now()}`,
             platform,
             product_code: productCode.toUpperCase(),
-            title: productName,
+            title: formattedTitle,
             image_url: imgUrl,
             redirect_url: linkUrl,
             is_active: true,
@@ -223,6 +270,9 @@ export default function AdminDashboard() {
           setProductName("");
           setLinkUrl("");
           setImageUrl("");
+          setCategory("Gamis");
+          setNewCategoryInput("");
+          setShowNewCategoryInput(false);
         }
         setIsSubmitting(false);
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -261,6 +311,9 @@ export default function AdminDashboard() {
     setProductName("");
     setLinkUrl("");
     setImageUrl("");
+    setCategory("Gamis");
+    setNewCategoryInput("");
+    setShowNewCategoryInput(false);
     setEditingProduct(null);
   };
 
@@ -499,6 +552,48 @@ export default function AdminDashboard() {
                 />
               </div>
 
+              {/* Product Category */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-sage mb-1.5 flex justify-between items-center">
+                  <span>Kategori Produk</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewCategoryInput(!showNewCategoryInput);
+                      setNewCategoryInput("");
+                    }}
+                    className="text-[10px] font-extrabold text-earthy-mauve hover:text-dark-slate transition-colors cursor-pointer"
+                  >
+                    {showNewCategoryInput ? "✕ Pilih dari List" : "+ Kategori Baru"}
+                  </button>
+                </label>
+
+                {showNewCategoryInput ? (
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      required
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      placeholder="Masukkan nama kategori baru (contoh: Alat Masak)"
+                      className="w-full bg-[#fbfcfc] border border-muted-sage/35 rounded-xl px-4 py-2.5 text-xs font-rubik placeholder-muted-sage/60 focus:outline-none focus:ring-2 focus:ring-earthy-mauve/20 focus:border-earthy-mauve"
+                    />
+                  </div>
+                ) : (
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-[#fbfcfc] border border-muted-sage/35 rounded-xl px-4 py-2.5 text-xs font-rubik text-dark-slate focus:outline-none focus:ring-2 focus:ring-earthy-mauve/20 focus:border-earthy-mauve"
+                  >
+                    {Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategories])).map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
               {/* Redirect URL */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-sage mb-1.5">
@@ -629,9 +724,14 @@ export default function AdminDashboard() {
 
                   {/* Description area inside preview */}
                   <div className="p-2.5 flex flex-col justify-between shrink-0">
-                    <h5 className="text-[9px] font-bold text-dark-slate leading-tight line-clamp-2 mb-1.5">
-                      {productName || "Nama Produk Preview"}
-                    </h5>
+                    <div>
+                      <span className="text-[7px] uppercase tracking-wider text-muted-sage font-extrabold block mb-0.5">
+                        {showNewCategoryInput && newCategoryInput.trim() !== "" ? newCategoryInput.trim() : category}
+                      </span>
+                      <h5 className="text-[9px] font-bold text-dark-slate leading-tight line-clamp-2 mb-1.5">
+                        {productName || "Nama Produk Preview"}
+                      </h5>
+                    </div>
                     <div className="pt-2 border-t border-muted-sage/10 flex items-center justify-between">
                       <span className="text-[8px] font-roboto-mono font-bold text-earthy-mauve">
                         Kode: {productCode.toUpperCase() || "S000"}
@@ -678,6 +778,7 @@ export default function AdminDashboard() {
               <thead>
                 <tr className="bg-neutral-50/50 border-b border-muted-sage/10 text-[10px] font-bold text-muted-sage uppercase tracking-wider">
                   <th className="py-4 px-6">Produk</th>
+                  <th className="py-4 px-6">Kategori</th>
                   <th className="py-4 px-6">Platform</th>
                   <th className="py-4 px-6">Kode Produk</th>
                   <th className="py-4 px-6">URL Tautan</th>
@@ -685,65 +786,75 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted-sage/5">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-neutral-50/30 custom-transition text-xs">
-                    {/* Title and Thumbnail */}
-                    <td className="py-3 px-6 flex items-center space-x-3">
-                      <div className="w-9 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-muted-sage/10">
-                        <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
-                      </div>
-                      <span className="font-semibold text-dark-slate line-clamp-1 max-w-[250px]">{p.title}</span>
-                    </td>
-                    
-                    {/* Platform Badge */}
-                    <td className="py-3 px-6">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase ${
-                          p.platform === "SHOPEE"
-                            ? "bg-orange-50 text-orange-700 border border-orange-100"
-                            : p.platform === "TIKTOK"
-                            ? "bg-zinc-100 text-zinc-900 border border-zinc-200"
-                            : "bg-purple-50 text-purple-700 border border-purple-100"
-                        }`}
-                      >
-                        {p.platform === "EBOOK" ? "E-Book" : p.platform}
-                      </span>
-                    </td>
+                {products.map((p) => {
+                  const { category: parsedCat, cleanTitle } = parseProductTitle(p.title);
+                  return (
+                    <tr key={p.id} className="hover:bg-neutral-50/30 custom-transition text-xs">
+                      {/* Title and Thumbnail */}
+                      <td className="py-3 px-6 flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-muted-sage/10">
+                          <img src={p.image_url} alt={cleanTitle} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="font-semibold text-dark-slate line-clamp-1 max-w-[200px]">{cleanTitle}</span>
+                      </td>
+                      
+                      {/* Category Badge */}
+                      <td className="py-3 px-6">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-muted-sage/10 text-muted-sage border border-muted-sage/25">
+                          {parsedCat}
+                        </span>
+                      </td>
 
-                    {/* Code */}
-                    <td className="py-3 px-6 font-roboto-mono font-bold text-earthy-mauve">
-                      {p.product_code}
-                    </td>
+                      {/* Platform Badge */}
+                      <td className="py-3 px-6">
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase ${
+                            p.platform === "SHOPEE"
+                              ? "bg-orange-50 text-orange-700 border border-orange-100"
+                              : p.platform === "TIKTOK"
+                              ? "bg-zinc-100 text-zinc-900 border border-zinc-200"
+                              : "bg-purple-50 text-purple-700 border border-purple-100"
+                          }`}
+                        >
+                          {p.platform === "EBOOK" ? "E-Book" : p.platform}
+                        </span>
+                      </td>
 
-                    {/* Redirect URL link */}
-                    <td className="py-3 px-6 font-roboto-mono text-muted-sage max-w-[200px] truncate">
-                      <a
-                        href={p.redirect_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline hover:text-earthy-mauve"
-                      >
-                        {p.redirect_url}
-                      </a>
-                    </td>
+                      {/* Code */}
+                      <td className="py-3 px-6 font-roboto-mono font-bold text-earthy-mauve">
+                        {p.product_code}
+                      </td>
 
-                    {/* Actions */}
-                    <td className="py-3 px-6 text-right space-x-3">
-                      <button
-                        onClick={() => handleEdit(p)}
-                        className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
-                      >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Redirect URL link */}
+                      <td className="py-3 px-6 font-roboto-mono text-muted-sage max-w-[200px] truncate">
+                        <a
+                          href={p.redirect_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline hover:text-earthy-mauve"
+                        >
+                          {p.redirect_url}
+                        </a>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3 px-6 text-right space-x-3">
+                        <button
+                          onClick={() => handleEdit(p)}
+                          className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
