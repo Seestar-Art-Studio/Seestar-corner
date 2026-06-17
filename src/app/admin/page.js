@@ -90,10 +90,8 @@ export default function AdminDashboard() {
       alert("Harap isi seluruh field formulir!");
       return;
     }
-
     setIsSubmitting(true);
-
-    const imgUrl = imageUrl || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600";
+    const imgUrl = imageUrl || "/default_preview.jpg";
 
     if (isSupabaseConfigured) {
       try {
@@ -537,11 +535,10 @@ export default function AdminDashboard() {
 
                 {/* Simulated Product Card Card Preview */}
                 <div className="bg-pure-white border border-muted-sage/15 rounded-xl overflow-hidden shadow-xs flex flex-col flex-1 max-h-[300px]">
-                  
                   {/* Photo area inside preview */}
                   <div className="relative aspect-square w-full bg-neutral-100 flex-1 overflow-hidden">
                     <img
-                      src={imageUrl || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600"}
+                      src={imageUrl || "/default_preview.jpg"}
                       alt="Product Preview"
                       className="w-full h-full object-cover"
                     />

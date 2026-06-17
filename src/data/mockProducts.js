@@ -24,7 +24,7 @@ export const MOCK_PRODUCTS = [
     platform: "SHOPEE",
     product_code: "S103",
     title: "Midi Dress Floral - Pastel Coral Breeze",
-    image_url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600",
+    image_url: "/default_preview.jpg",
     redirect_url: "https://shopee.co.id/product/mock-mididress",
     is_active: true,
     created_at: "2026-06-02T12:00:00Z"
