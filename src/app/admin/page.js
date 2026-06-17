@@ -192,6 +192,23 @@ export default function AdminDashboard() {
     setImageUrl("");
   };
 
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Scroll listener for mobile sticky header behavior
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+        setIsMenuOpen(false); // Close mobile menu on scroll
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // Logout admin
   const handleLogout = () => {
     localStorage.removeItem("kakila_admin_key");
@@ -235,23 +252,35 @@ export default function AdminDashboard() {
     <div className="min-h-screen flex flex-col md:flex-row bg-[#f0f4f5] text-dark-slate font-rubik">
       
       {/* A. Left Sidebar */}
-      <aside className="w-full md:w-64 bg-dark-slate text-pure-white flex flex-col justify-between shrink-0 shadow-lg z-10">
+      <aside className="w-full md:w-64 bg-dark-slate text-pure-white flex flex-col justify-between shrink-0 shadow-lg z-20 md:sticky md:top-0 md:h-screen sticky top-0 transition-all duration-300">
         <div>
-          {/* Logo & Platform Info */}
-          <div className="p-6 border-b border-muted-sage/15 flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-earthy-mauve flex items-center justify-center font-bold text-lg text-pure-white">
-              K
-            </div>
-            <div>
-              <h1 className="font-bold text-base leading-tight tracking-wide">Inventory Panel</h1>
-              <p className="text-[10px] text-dusty-rose font-medium">Kakila Web Catalog</p>
-            </div>
+          {/* Logo & Title & Hamburger */}
+          <div className="p-4 md:p-6 border-b border-muted-sage/15 flex items-center justify-between">
+            <h1 className="font-bold text-base leading-tight tracking-wide">Admin Dashboard</h1>
+            
+            {/* Hamburger Button (Mobile Only) */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-muted-sage hover:text-pure-white transition-colors focus:outline-none cursor-pointer"
+              aria-label="Toggle Menu"
+            >
+              {isMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
-
-          {/* Sidebar Navigation */}
-          <nav className="p-4 space-y-1.5">
+          
+          {/* Navigation Menu */}
+          <nav className={`${isMenuOpen ? "block" : "hidden"} md:block absolute md:static top-full left-0 right-0 bg-dark-slate md:bg-transparent shadow-xl md:shadow-none p-4 space-y-2 z-30 border-b border-muted-sage/15 md:border-b-0`}>
             <a
               href="#inventory"
+              onClick={() => setIsMenuOpen(false)}
               className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-earthy-mauve text-pure-white font-semibold transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,6 +290,7 @@ export default function AdminDashboard() {
             </a>
             <a
               href="/"
+              onClick={() => setIsMenuOpen(false)}
               className="flex items-center space-x-3 px-4 py-3 rounded-xl text-muted-sage hover:bg-white/5 hover:text-pure-white font-medium transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,11 +298,20 @@ export default function AdminDashboard() {
               </svg>
               <span>Lihat Landing Page</span>
             </a>
+            <button
+              onClick={handleLogout}
+              className="md:hidden flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-muted-sage hover:bg-white/5 hover:text-pure-white font-medium transition-colors cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Keluar</span>
+            </button>
           </nav>
         </div>
 
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-muted-sage/15 bg-black/10 flex items-center justify-between">
+        {/* User Info & Logout (Desktop Only) */}
+        <div className="p-4 border-t border-muted-sage/15 bg-black/10 hidden md:flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-full bg-earthy-mauve/25 overflow-hidden">
               <img
@@ -299,7 +338,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* B. Main Area */}
-      <main className="flex-1 p-6 md:p-10 flex flex-col overflow-y-auto max-h-screen">
+      <main className="flex-1 p-6 md:p-10 flex flex-col md:overflow-y-auto md:max-h-screen">
         
         {/* Top Header */}
         <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
