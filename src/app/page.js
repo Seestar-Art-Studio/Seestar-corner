@@ -361,7 +361,7 @@ export default function Home() {
 
             {/* Bottom Row */}
             <div className="max-w-7xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-muted-sage gap-4">
-              <span>Copyright © 2026 Nabila Muchsin. All rights reserved.</span>
+              <span>Copyright © 2026 {PROFILE_DATA.display_name}. All rights reserved.</span>
             </div>
           </footer>
         </div>

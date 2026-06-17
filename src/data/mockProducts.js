@@ -122,7 +122,7 @@ export const MOCK_PRODUCTS = [
 ];
 
 export const PROFILE_DATA = {
-  display_name: "Nabila Muchsin",
-  tagline: "Where Modesty Meets Class.",
+  display_name: "Seestar Corner",
+  tagline: "Your daily style & essentials destination.",
   avatar_url: "/kakila_photo.jpg"
 };

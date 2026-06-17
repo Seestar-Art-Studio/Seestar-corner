@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MOCK_PRODUCTS } from "@/data/mockProducts";
+import { MOCK_PRODUCTS, PROFILE_DATA } from "@/data/mockProducts";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function AdminDashboard() {
@@ -387,13 +387,13 @@ export default function AdminDashboard() {
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-full bg-earthy-mauve/25 overflow-hidden">
               <img
-                src="/kakila_photo.jpg"
-                alt="Nabila Muchsin"
+                src={PROFILE_DATA.avatar_url}
+                alt={PROFILE_DATA.display_name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <p className="text-xs font-bold leading-tight">Nabila Muchsin</p>
+              <p className="text-xs font-bold leading-tight">{PROFILE_DATA.display_name}</p>
               <p className="text-[9px] text-muted-sage uppercase font-bold tracking-wider">Admin</p>
             </div>
           </div>
@@ -604,12 +604,12 @@ export default function AdminDashboard() {
                 <div className="text-center mb-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-dusty-rose p-0.5 mx-auto mb-1">
                     <img
-                      src="/kakila_photo.jpg"
-                      alt="Nabila Muchsin"
+                      src={PROFILE_DATA.avatar_url}
+                      alt={PROFILE_DATA.display_name}
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <h4 className="text-[9px] font-extrabold text-dark-slate">Nabila Muchsin</h4>
+                  <h4 className="text-[9px] font-extrabold text-dark-slate">{PROFILE_DATA.display_name}</h4>
                   <p className="text-[7px] text-muted-sage">Katalog {platform}</p>
                 </div>
 
