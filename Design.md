@@ -30,7 +30,7 @@ This is the default view. It looks like a premium Linktree.
 * **Profile Section:** Circular avatar placeholder. Name "Nabila Muchsin" (Rubik, Bold, `#424B54` if on white, or `#FFFFFF` if on dark header). Subtitle: "Where Modesty Meets Class." (Rubik, `#93A8AC`).
 * **Main Action Buttons (Vertical Stack):** * Wide, pill-shaped buttons (`rounded-full`), block-level.
     * Style: Solid white background, `#424B54` border, or solid `#9B6A6C`. Font: Rubik.
-    * Button 1: "Beli E-Book Nabila" (Simulates redirect, external link).
+    * Button 1: "E-Book" (Simulates redirect, external link).
     * Button 2: "Lihat Produk Shopee" (OnClick -> sets `activePhase` to `'CATALOG'` and `selectedPlatform` to `'SHOPEE'`).
     * Button 3: "Lihat Produk TikTok Shop" (OnClick -> sets `activePhase` to `'CATALOG'` and `selectedPlatform` to `'TIKTOK'`).
 

@@ -135,7 +135,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="block w-full py-4 rounded-full bg-earthy-mauve hover:bg-dark-slate text-pure-white font-semibold shadow-md hover:shadow-lg transform active:scale-98 custom-transition"
               >
-                Beli E-Book Nabila
+                E-Book
               </a>
 
               {/* Button 2: Shopee */}
@@ -409,10 +409,10 @@ export default function Home() {
                       <button onClick={() => { setSelectedPlatform("SHOPEE"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">Shopee</button>
                     </li>
                     <li>
-                      <button onClick={() => { setSelectedPlatform("TIKTOK"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">TikTok Shop</button>
+                      <button onClick={() => { setSelectedPlatform("TIKTOK"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">TikTokShop</button>
                     </li>
                     <li>
-                      <a href="https://lynk.id/nabilahmuchsin" target="_blank" rel="noopener noreferrer" className="hover:text-pure-white transition-colors cursor-pointer">Beli E-Book</a>
+                      <a href="https://lynk.id/nabilahmuchsin" target="_blank" rel="noopener noreferrer" className="hover:text-pure-white transition-colors cursor-pointer">E-Book</a>
                     </li>
                   </ul>
                 </div>

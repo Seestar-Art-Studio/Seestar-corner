@@ -34,7 +34,7 @@ Create a root client component (`src/app/layout.tsx` wrapper or `src/components/
 * **Header:**
     * Profile: Circular placeholder, "Nabila Muchsin" (Rubik, Bold), "Where Modesty Meets Class." (Rubik, `#93A8AC`).
 * **Actions:** Vertical stack of wide, rounded buttons.
-    * Button 1: "Beli E-Book Nabila" (External Link).
+    * Button 1: "E-Book" (External Link).
     * Button 2: "Lihat Produk Shopee" (OnClick: `setActivePhase('CATALOG')`, `setSelectedPlatform('SHOPEE')`).
     * Button 3: "Lihat Produk TikTok Shop" (OnClick: `setActivePhase('CATALOG')`, `setSelectedPlatform('TIKTOK')`).
 
