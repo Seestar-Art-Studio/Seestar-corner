@@ -142,6 +142,18 @@ export default function AdminDashboard() {
       alert("Harap isi seluruh field formulir!");
       return;
     }
+
+    // Check if the product code already exists (case-insensitive)
+    const isCodeDuplicate = products.some(p => 
+      p.product_code === productCode.trim().toUpperCase() && 
+      (!editingProduct || p.id !== editingProduct.id)
+    );
+
+    if (isCodeDuplicate) {
+      alert(`Kode produk "${productCode.trim().toUpperCase()}" sudah terdaftar. Silakan gunakan kode produk lain!`);
+      return;
+    }
+
     setIsSubmitting(true);
     const imgUrl = imageUrl || "/default_preview.jpg";
 
