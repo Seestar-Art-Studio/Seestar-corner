@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MOCK_PRODUCTS, PROFILE_DATA } from "@/data/mockProducts";
+import { PROFILE_DATA } from "@/data/mockProducts";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function Home() {
@@ -10,7 +10,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 8; // Shows pagination beautifully
 

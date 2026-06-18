@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MOCK_PRODUCTS, PROFILE_DATA } from "@/data/mockProducts";
+import { PROFILE_DATA } from "@/data/mockProducts";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function AdminDashboard() {
@@ -11,7 +11,7 @@ export default function AdminDashboard() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Form & Product List States
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [platform, setPlatform] = useState("SHOPEE"); // 'SHOPEE' | 'TIKTOK'
   const [productCode, setProductCode] = useState("");
   const [productName, setProductName] = useState("");
@@ -27,7 +27,6 @@ export default function AdminDashboard() {
   const [category, setCategory] = useState("Gamis");
   const [newCategoryInput, setNewCategoryInput] = useState("");
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
-  const [customCategories, setCustomCategories] = useState([]);
 
   // Helper to parse category from title [Category] Clean Title
   const parseProductTitle = (fullTitle) => {
@@ -44,12 +43,12 @@ export default function AdminDashboard() {
     };
   };
 
-  // Sync custom categories based on loaded products
-  useEffect(() => {
-    const existingCats = products.map(p => parseProductTitle(p.title).category);
-    const uniqueExisting = existingCats.filter(cat => !DEFAULT_CATEGORIES.includes(cat));
-    setCustomCategories(Array.from(new Set(uniqueExisting)));
-  }, [products]);
+  // Derived custom categories based on loaded products
+  const customCategories = Array.from(new Set(
+    products
+      .map(p => parseProductTitle(p.title).category)
+      .filter(cat => !DEFAULT_CATEGORIES.includes(cat))
+  ));
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
