@@ -12,7 +12,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 8; // Shows pagination beautifully
+  const itemsPerPage = 12; // Shows pagination beautifully
 
   // Helper to parse category from title [Category] Clean Title
   const parseProductTitle = (fullTitle) => {
@@ -287,7 +287,38 @@ export default function Home() {
             </div>
 
             {/* Product Grid Area (4 columns on desktop, 2 columns on mobile) */}
-            {paginatedProducts.length > 0 ? (
+            {isLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                {Array.from({ length: itemsPerPage }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-pure-white border border-muted-sage/20 rounded-2xl overflow-hidden flex flex-col animate-pulse"
+                  >
+                    {/* Image container aspect square */}
+                    <div className="relative aspect-square bg-muted-sage/10 w-full" />
+
+                    {/* Content Area */}
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                      <div>
+                        {/* Category badge skeleton */}
+                        <div className="h-3.5 w-16 bg-muted-sage/15 rounded-md mb-2" />
+                        {/* Title skeleton */}
+                        <div className="space-y-2">
+                          <div className="h-4 bg-muted-sage/15 rounded-md w-5/6" />
+                          <div className="h-4 bg-muted-sage/15 rounded-md w-2/3" />
+                        </div>
+                      </div>
+                      <div className="pt-3 flex items-center justify-between border-t border-muted-sage/10 mt-2">
+                        {/* Code skeleton */}
+                        <div className="h-3 w-12 bg-muted-sage/15 rounded-md" />
+                        {/* Link skeleton */}
+                        <div className="h-3 w-20 bg-muted-sage/15 rounded-md" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : paginatedProducts.length > 0 ? (
               <div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                   {paginatedProducts.map((product) => {
