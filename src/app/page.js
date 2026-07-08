@@ -4,6 +4,60 @@ import { useState, useEffect } from "react";
 import { PROFILE_DATA } from "@/data/mockProducts";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
+function ProductCard({ product, parseProductTitle }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const { category, cleanTitle } = parseProductTitle(product.title);
+
+  return (
+    <a
+      href={product.redirect_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group bg-pure-white border border-muted-sage/20 rounded-2xl overflow-hidden hover:shadow-lg hover:border-earthy-mauve/30 transform hover:-translate-y-1 custom-transition flex flex-col"
+    >
+      {/* Image container aspect square */}
+      <div className={`relative aspect-square overflow-hidden w-full ${!imgLoaded ? "bg-neutral-200 animate-pulse" : "bg-neutral-100"}`}>
+        <img
+          src={product.image_url}
+          alt={cleanTitle}
+          className={`w-full h-full object-cover custom-transition group-hover:scale-105 ${
+            imgLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          loading="lazy"
+          onLoad={() => setImgLoaded(true)}
+        />
+        {/* Overlay Category badge */}
+        <div className="absolute top-3 left-3 bg-pure-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[9px] font-extrabold text-earthy-mauve shadow-xs uppercase">
+          {product.platform === "EBOOK" ? "Book" : product.platform}
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <span className="text-[9px] uppercase tracking-wider text-muted-sage font-extrabold block mb-1">
+            {category}
+          </span>
+          <h3 className="text-sm font-semibold font-rubik text-dark-slate leading-snug line-clamp-2 mb-2 group-hover:text-earthy-mauve custom-transition">
+            {cleanTitle}
+          </h3>
+        </div>
+        <div className="pt-3 flex items-center justify-between border-t border-muted-sage/10 mt-2">
+          <span className="text-xs font-roboto-mono text-earthy-mauve font-bold">
+            Kode: {product.product_code}
+          </span>
+          <span className="text-xs font-semibold font-rubik text-muted-sage group-hover:text-dark-slate flex items-center">
+            Beli Sekarang
+            <svg className="w-3 h-3 ml-1 transform group-hover:translate-x-0.5 custom-transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </a>
+  );
+}
+
 export default function Home() {
   const [activePhase, setActivePhase] = useState("LINK_TREE"); // 'LINK_TREE' | 'CATALOG'
   const [selectedPlatform, setSelectedPlatform] = useState("SHOPEE"); // 'SHOPEE' | 'TIKTOK' | 'EBOOK'
@@ -12,6 +66,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const itemsPerPage = 12; // Shows pagination beautifully
 
   // Helper to parse category from title [Category] Clean Title
@@ -55,13 +110,24 @@ export default function Home() {
     fetchProducts();
   }, []);
 
+  // Helper to trigger a smooth visual loading transition
+  const triggerTransition = (action) => {
+    setIsTransitioning(true);
+    action();
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300); // 300ms loading skeleton screen
+  };
+
   // Handler to navigate to Catalog
   const openCatalog = (platform) => {
-    setSelectedPlatform(platform);
-    setSelectedCategory("Semua");
-    setSearchQuery("");
-    setCurrentPage(1);
-    setActivePhase("CATALOG");
+    triggerTransition(() => {
+      setSelectedPlatform(platform);
+      setSelectedCategory("Semua");
+      setSearchQuery("");
+      setCurrentPage(1);
+      setActivePhase("CATALOG");
+    });
   };
 
   // Get all active products for the current platform
@@ -227,10 +293,12 @@ export default function Home() {
               <button
                 key={plat}
                 onClick={() => {
-                  setSelectedPlatform(plat);
-                  setSelectedCategory("Semua");
-                  setSearchQuery("");
-                  setCurrentPage(1);
+                  triggerTransition(() => {
+                    setSelectedPlatform(plat);
+                    setSelectedCategory("Semua");
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  });
                 }}
                 className={`px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider custom-transition cursor-pointer ${selectedPlatform === plat
                   ? "bg-earthy-mauve text-pure-white shadow-xs font-bold"
@@ -271,8 +339,10 @@ export default function Home() {
                   <button
                     key={cat}
                     onClick={() => {
-                      setSelectedCategory(cat);
-                      setCurrentPage(1);
+                      triggerTransition(() => {
+                        setSelectedCategory(cat);
+                        setCurrentPage(1);
+                      });
                     }}
                     className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold custom-transition cursor-pointer select-none ${
                       selectedCategory === cat
@@ -287,7 +357,7 @@ export default function Home() {
             </div>
 
             {/* Product Grid Area (4 columns on desktop, 2 columns on mobile) */}
-            {isLoading ? (
+            {isLoading || isTransitioning ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {Array.from({ length: itemsPerPage }).map((_, idx) => (
                   <div
@@ -295,24 +365,24 @@ export default function Home() {
                     className="bg-pure-white border border-muted-sage/20 rounded-2xl overflow-hidden flex flex-col animate-pulse"
                   >
                     {/* Image container aspect square */}
-                    <div className="relative aspect-square bg-muted-sage/10 w-full" />
+                    <div className="relative aspect-square bg-neutral-200 w-full" />
 
                     {/* Content Area */}
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
                       <div>
                         {/* Category badge skeleton */}
-                        <div className="h-3.5 w-16 bg-muted-sage/15 rounded-md mb-2" />
+                        <div className="h-3.5 w-16 bg-neutral-200 rounded-md mb-2" />
                         {/* Title skeleton */}
                         <div className="space-y-2">
-                          <div className="h-4 bg-muted-sage/15 rounded-md w-5/6" />
-                          <div className="h-4 bg-muted-sage/15 rounded-md w-2/3" />
+                          <div className="h-4 bg-neutral-200 rounded-md w-5/6" />
+                          <div className="h-4 bg-neutral-200 rounded-md w-2/3" />
                         </div>
                       </div>
                       <div className="pt-3 flex items-center justify-between border-t border-muted-sage/10 mt-2">
                         {/* Code skeleton */}
-                        <div className="h-3 w-12 bg-muted-sage/15 rounded-md" />
+                        <div className="h-3 w-12 bg-neutral-200 rounded-md" />
                         {/* Link skeleton */}
-                        <div className="h-3 w-20 bg-muted-sage/15 rounded-md" />
+                        <div className="h-3 w-20 bg-neutral-200 rounded-md" />
                       </div>
                     </div>
                   </div>
@@ -321,55 +391,13 @@ export default function Home() {
             ) : paginatedProducts.length > 0 ? (
               <div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {paginatedProducts.map((product) => {
-                    const { category, cleanTitle } = parseProductTitle(product.title);
-                    return (
-                      <a
-                        key={product.id}
-                        href={product.redirect_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group bg-pure-white border border-muted-sage/20 rounded-2xl overflow-hidden hover:shadow-lg hover:border-earthy-mauve/30 transform hover:-translate-y-1 custom-transition flex flex-col"
-                      >
-                        {/* Image container aspect square */}
-                        <div className="relative aspect-square bg-neutral-100 overflow-hidden w-full">
-                          <img
-                            src={product.image_url}
-                            alt={cleanTitle}
-                            className="w-full h-full object-cover custom-transition group-hover:scale-105"
-                            loading="lazy"
-                          />
-                          {/* Overlay Category badge */}
-                          <div className="absolute top-3 left-3 bg-pure-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[9px] font-extrabold text-earthy-mauve shadow-xs uppercase">
-                            {product.platform === "EBOOK" ? "Book" : product.platform}
-                          </div>
-                        </div>
-
-                        {/* Content Area */}
-                        <div className="p-4 flex-1 flex flex-col justify-between">
-                          <div>
-                            <span className="text-[9px] uppercase tracking-wider text-muted-sage font-extrabold block mb-1">
-                              {category}
-                            </span>
-                            <h3 className="text-sm font-semibold font-rubik text-dark-slate leading-snug line-clamp-2 mb-2 group-hover:text-earthy-mauve custom-transition">
-                              {cleanTitle}
-                            </h3>
-                          </div>
-                          <div className="pt-3 flex items-center justify-between border-t border-muted-sage/10 mt-2">
-                            <span className="text-xs font-roboto-mono text-earthy-mauve font-bold">
-                              Kode: {product.product_code}
-                            </span>
-                            <span className="text-xs font-semibold font-rubik text-muted-sage group-hover:text-dark-slate flex items-center">
-                              Beli Sekarang
-                              <svg className="w-3 h-3 ml-1 transform group-hover:translate-x-0.5 custom-transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                              </svg>
-                            </span>
-                          </div>
-                        </div>
-                      </a>
-                    );
-                  })}
+                  {paginatedProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      parseProductTitle={parseProductTitle}
+                    />
+                  ))}
                 </div>
 
                 {/* Pagination Controls */}
@@ -437,10 +465,10 @@ export default function Home() {
                   <h4 className="text-xs font-bold text-dusty-rose uppercase tracking-wider mb-3">Links</h4>
                   <ul className="space-y-2 text-sm text-muted-sage">
                     <li>
-                      <button onClick={() => { setSelectedPlatform("SHOPEE"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">Shopee</button>
+                      <button onClick={() => { triggerTransition(() => { setSelectedPlatform("SHOPEE"); setCurrentPage(1); }); }} className="hover:text-pure-white transition-colors cursor-pointer">Shopee</button>
                     </li>
                     <li>
-                      <button onClick={() => { setSelectedPlatform("TIKTOK"); setCurrentPage(1); }} className="hover:text-pure-white transition-colors cursor-pointer">TikTokShop</button>
+                      <button onClick={() => { triggerTransition(() => { setSelectedPlatform("TIKTOK"); setCurrentPage(1); }); }} className="hover:text-pure-white transition-colors cursor-pointer">TikTokShop</button>
                     </li>
                     <li>
                       <a href="https://lynk.id/nabilahmuchsin" target="_blank" rel="noopener noreferrer" className="hover:text-pure-white transition-colors cursor-pointer">E-Book</a>

@@ -143,14 +143,15 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Check if the product code already exists (case-insensitive)
+    // Check if the product code already exists (case-insensitive) for the same platform
     const isCodeDuplicate = products.some(p => 
       p.product_code === productCode.trim().toUpperCase() && 
+      p.platform === platform &&
       (!editingProduct || p.id !== editingProduct.id)
     );
 
     if (isCodeDuplicate) {
-      alert(`Kode produk "${productCode.trim().toUpperCase()}" sudah terdaftar. Silakan gunakan kode produk lain!`);
+      alert(`Kode produk "${productCode.trim().toUpperCase()}" sudah terdaftar untuk platform ${platform === "SHOPEE" ? "Shopee" : "TikTok Shop"}. Silakan gunakan kode produk lain!`);
       return;
     }
 

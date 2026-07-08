@@ -24,7 +24,7 @@ id (UUID, Primary Key)
 
 platform (Enum: 'SHOPEE', 'TIKTOK', 'EBOOK')
 
-product_code (String, Unique) — Misal: A1111
+product_code (String) — Misal: A1111 (Unique gabungan bersama platform, e.g. UNIQUE(product_code, platform))
 
 title (String)
 
