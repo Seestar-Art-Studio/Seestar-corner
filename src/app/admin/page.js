@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [successMessage, setSuccessMessage] = useState("");
   const [editingProduct, setEditingProduct] = useState(null);
   const [isPinned, setIsPinned] = useState(false);
+  const [tablePlatformFilter, setTablePlatformFilter] = useState("ALL"); // 'ALL' | 'SHOPEE' | 'TIKTOK'
 
   // Category States & Helpers
   const DEFAULT_CATEGORIES = ["Gamis", "Hijab", "Tas", "Rok", "Tunik", "Kemeja", "Alat Masak", "Bumbu Masak", "Lainnya"];
@@ -849,11 +850,77 @@ export default function AdminDashboard() {
 
         {/* 3. Bottom Row: Registered Products List */}
         <section className="bg-pure-white border border-muted-sage/20 rounded-2xl shadow-xs overflow-hidden">
-          <div className="px-6 py-5 border-b border-muted-sage/10 flex items-center justify-between">
-            <h3 className="text-base font-bold text-dark-slate">Katalog Produk Terdaftar ({products.length})</h3>
-            <span className="bg-neutral-100 text-dark-slate text-xs font-bold px-3 py-1 rounded-full">
-              Live Data
-            </span>
+          <div className="px-6 py-4 border-b border-muted-sage/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <h3 className="text-base font-bold text-dark-slate">
+                Katalog Produk Terdaftar ({products.filter((p) => tablePlatformFilter === "ALL" || p.platform === tablePlatformFilter).length}
+                {tablePlatformFilter !== "ALL" && <span className="text-xs text-muted-sage font-normal ml-1">(dari {products.length})</span>})
+              </h3>
+              <span className="bg-neutral-100 text-dark-slate text-xs font-bold px-3 py-1 rounded-full shrink-0">
+                Live Data
+              </span>
+            </div>
+
+            {/* Filter Platform Buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-bold text-muted-sage uppercase tracking-wider mr-1">
+                Platform:
+              </span>
+
+              {/* Semua Button */}
+              <button
+                type="button"
+                onClick={() => setTablePlatformFilter("ALL")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold custom-transition cursor-pointer flex items-center gap-1.5 ${
+                  tablePlatformFilter === "ALL"
+                    ? "bg-dark-slate text-pure-white shadow-xs"
+                    : "bg-neutral-100 text-muted-sage hover:text-dark-slate hover:bg-neutral-200/60"
+                }`}
+              >
+                <span>Semua</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  tablePlatformFilter === "ALL" ? "bg-white/20 text-white" : "bg-muted-sage/20 text-dark-slate"
+                }`}>
+                  {products.length}
+                </span>
+              </button>
+
+              {/* Shopee Button */}
+              <button
+                type="button"
+                onClick={() => setTablePlatformFilter(tablePlatformFilter === "SHOPEE" ? "ALL" : "SHOPEE")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold custom-transition cursor-pointer flex items-center gap-1.5 ${
+                  tablePlatformFilter === "SHOPEE"
+                    ? "bg-orange-500 text-pure-white shadow-xs ring-2 ring-orange-400/40"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100/80 border border-orange-200/60"
+                }`}
+              >
+                <span>Shopee</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  tablePlatformFilter === "SHOPEE" ? "bg-white/25 text-white" : "bg-orange-200/70 text-orange-900"
+                }`}>
+                  {products.filter(p => p.platform === "SHOPEE").length}
+                </span>
+              </button>
+
+              {/* TikTok Button */}
+              <button
+                type="button"
+                onClick={() => setTablePlatformFilter(tablePlatformFilter === "TIKTOK" ? "ALL" : "TIKTOK")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold custom-transition cursor-pointer flex items-center gap-1.5 ${
+                  tablePlatformFilter === "TIKTOK"
+                    ? "bg-zinc-900 text-pure-white shadow-xs ring-2 ring-zinc-700/40"
+                    : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200/80 border border-zinc-200"
+                }`}
+              >
+                <span>TikTok</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  tablePlatformFilter === "TIKTOK" ? "bg-white/25 text-white" : "bg-zinc-300/60 text-zinc-900"
+                }`}>
+                  {products.filter(p => p.platform === "TIKTOK").length}
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -869,102 +936,111 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted-sage/5">
-                {[...products]
-                  .sort((a, b) => {
-                    if (a.is_pinned && !b.is_pinned) return -1;
-                    if (!a.is_pinned && b.is_pinned) return 1;
-                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-                  })
-                  .map((p) => {
-                    const { category: parsedCat, cleanTitle } = parseProductTitle(p.title);
-                    return (
-                      <tr key={p.id} className={`hover:bg-neutral-50/30 custom-transition text-xs ${p.is_pinned ? "bg-amber-50/30" : ""}`}>
-                        {/* Title and Thumbnail */}
-                        <td className="py-3 px-6 flex items-center space-x-3">
-                          <div className="w-9 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-muted-sage/10 relative">
-                            <img src={p.image_url} alt={cleanTitle} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex flex-col">
-                            <div className="flex items-center space-x-1.5">
-                              <span className="font-semibold text-dark-slate line-clamp-1 max-w-[200px]">{cleanTitle}</span>
-                              {p.is_pinned && (
-                                <span className="shrink-0 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-amber-200 shadow-2xs">
-                                  📌 Disematkan
-                                </span>
-                              )}
+                {products.filter((p) => tablePlatformFilter === "ALL" || p.platform === tablePlatformFilter).length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="py-8 text-center text-xs font-medium text-muted-sage">
+                      Tidak ada produk terdaftar untuk platform <span className="font-bold text-dark-slate">{tablePlatformFilter}</span>.
+                    </td>
+                  </tr>
+                ) : (
+                  [...products]
+                    .filter((p) => tablePlatformFilter === "ALL" || p.platform === tablePlatformFilter)
+                    .sort((a, b) => {
+                      if (a.is_pinned && !b.is_pinned) return -1;
+                      if (!a.is_pinned && b.is_pinned) return 1;
+                      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                    })
+                    .map((p) => {
+                      const { category: parsedCat, cleanTitle } = parseProductTitle(p.title);
+                      return (
+                        <tr key={p.id} className={`hover:bg-neutral-50/30 custom-transition text-xs ${p.is_pinned ? "bg-amber-50/30" : ""}`}>
+                          {/* Title and Thumbnail */}
+                          <td className="py-3 px-6 flex items-center space-x-3">
+                            <div className="w-9 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-muted-sage/10 relative">
+                              <img src={p.image_url} alt={cleanTitle} className="w-full h-full object-cover" />
                             </div>
-                          </div>
-                        </td>
-                        
-                        {/* Category Badge */}
-                        <td className="py-3 px-6">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-muted-sage/10 text-muted-sage border border-muted-sage/25">
-                            {parsedCat}
-                          </span>
-                        </td>
+                            <div className="flex flex-col">
+                              <div className="flex items-center space-x-1.5">
+                                <span className="font-semibold text-dark-slate line-clamp-1 max-w-[200px]">{cleanTitle}</span>
+                                {p.is_pinned && (
+                                  <span className="shrink-0 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-amber-200 shadow-2xs">
+                                    📌 Disematkan
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          
+                          {/* Category Badge */}
+                          <td className="py-3 px-6">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-muted-sage/10 text-muted-sage border border-muted-sage/25">
+                              {parsedCat}
+                            </span>
+                          </td>
 
-                        {/* Platform Badge */}
-                        <td className="py-3 px-6">
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase ${
-                              p.platform === "SHOPEE"
-                                ? "bg-orange-50 text-orange-700 border border-orange-100"
-                                : p.platform === "TIKTOK"
-                                ? "bg-zinc-100 text-zinc-900 border border-zinc-200"
-                                : "bg-purple-50 text-purple-700 border border-purple-100"
-                            }`}
-                          >
-                            {p.platform === "EBOOK" ? "E-Book" : p.platform}
-                          </span>
-                        </td>
+                          {/* Platform Badge */}
+                          <td className="py-3 px-6">
+                            <span
+                              className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase ${
+                                p.platform === "SHOPEE"
+                                  ? "bg-orange-50 text-orange-700 border border-orange-100"
+                                  : p.platform === "TIKTOK"
+                                  ? "bg-zinc-100 text-zinc-900 border border-zinc-200"
+                                  : "bg-purple-50 text-purple-700 border border-purple-100"
+                              }`}
+                            >
+                              {p.platform === "EBOOK" ? "E-Book" : p.platform}
+                            </span>
+                          </td>
 
-                        {/* Code */}
-                        <td className="py-3 px-6 font-roboto-mono font-bold text-earthy-mauve">
-                          {p.product_code}
-                        </td>
+                          {/* Code */}
+                          <td className="py-3 px-6 font-roboto-mono font-bold text-earthy-mauve">
+                            {p.product_code}
+                          </td>
 
-                        {/* Redirect URL link */}
-                        <td className="py-3 px-6 font-roboto-mono text-muted-sage max-w-[200px] truncate">
-                          <a
-                            href={p.redirect_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline hover:text-earthy-mauve"
-                          >
-                            {p.redirect_url}
-                          </a>
-                        </td>
+                          {/* Redirect URL link */}
+                          <td className="py-3 px-6 font-roboto-mono text-muted-sage max-w-[200px] truncate">
+                            <a
+                              href={p.redirect_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline hover:text-earthy-mauve"
+                            >
+                              {p.redirect_url}
+                            </a>
+                          </td>
 
-                        {/* Actions */}
-                        <td className="py-3 px-6 text-right space-x-3">
-                          <button
-                            onClick={() => handleTogglePin(p)}
-                            title={p.is_pinned ? "Batal sematkan produk ini" : "Sematkan produk ini ke paling atas"}
-                            className={`font-bold custom-transition cursor-pointer inline-flex items-center gap-1 ${
-                              p.is_pinned
-                                ? "text-amber-600 hover:text-amber-800 hover:underline"
-                                : "text-muted-sage hover:text-dark-slate hover:underline"
-                            }`}
-                          >
-                            <span>📌</span>
-                            <span>{p.is_pinned ? "Batal Semat" : "Sematkan"}</span>
-                          </button>
-                          <button
-                            onClick={() => handleEdit(p)}
-                            className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
-                          >
-                            Hapus
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          {/* Actions */}
+                          <td className="py-3 px-6 text-right space-x-3">
+                            <button
+                              onClick={() => handleTogglePin(p)}
+                              title={p.is_pinned ? "Batal sematkan produk ini" : "Sematkan produk ini ke paling atas"}
+                              className={`font-bold custom-transition cursor-pointer inline-flex items-center gap-1 ${
+                                p.is_pinned
+                                  ? "text-amber-600 hover:text-amber-800 hover:underline"
+                                  : "text-muted-sage hover:text-dark-slate hover:underline"
+                              }`}
+                            >
+                              <span>📌</span>
+                              <span>{p.is_pinned ? "Batal Semat" : "Sematkan"}</span>
+                            </button>
+                            <button
+                              onClick={() => handleEdit(p)}
+                              className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
+                            >
+                              Hapus
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                )}
               </tbody>
             </table>
           </div>
