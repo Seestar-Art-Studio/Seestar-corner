@@ -433,19 +433,19 @@ export default function AdminDashboard() {
 
   // 3. ACTUAL ADMIN DASHBOARD
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#f0f4f5] text-dark-slate font-rubik">
+    <div className="min-h-screen flex flex-col xl:flex-row bg-[#f0f4f5] text-dark-slate font-rubik overflow-x-hidden">
       
-      {/* A. Left Sidebar */}
-      <aside className="w-full md:w-64 bg-dark-slate text-pure-white flex flex-col justify-between shrink-0 shadow-lg z-20 md:sticky md:top-0 md:h-screen sticky top-0 transition-all duration-300">
+      {/* A. Left Sidebar (Desktop xl: sidebar, iPad Pro/iPad/Mobile < xl top navbar + hamburger) */}
+      <aside className="w-full xl:w-64 bg-dark-slate text-pure-white flex flex-col justify-between shrink-0 shadow-lg z-20 xl:sticky xl:top-0 xl:h-screen sticky top-0 transition-all duration-300">
         <div>
           {/* Logo & Title & Hamburger */}
-          <div className="p-4 md:p-6 border-b border-muted-sage/15 flex items-center justify-between">
+          <div className="p-4 xl:p-6 border-b border-muted-sage/15 flex items-center justify-between">
             <h1 className="font-bold text-base leading-tight tracking-wide">Admin Dashboard</h1>
             
-            {/* Hamburger Button (Mobile Only) */}
+            {/* Hamburger Button (Tablet / iPad Pro & Mobile) */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-muted-sage hover:text-pure-white transition-colors focus:outline-none cursor-pointer"
+              className="xl:hidden p-2 text-muted-sage hover:text-pure-white transition-colors focus:outline-none cursor-pointer"
               aria-label="Toggle Menu"
             >
               {isMenuOpen ? (
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
           </div>
           
           {/* Navigation Menu */}
-          <nav className={`${isMenuOpen ? "block" : "hidden"} md:block absolute md:static top-full left-0 right-0 bg-dark-slate md:bg-transparent shadow-xl md:shadow-none p-4 space-y-2 z-30 border-b border-muted-sage/15 md:border-b-0`}>
+          <nav className={`${isMenuOpen ? "block" : "hidden"} xl:block absolute xl:static top-full left-0 right-0 bg-dark-slate xl:bg-transparent shadow-xl xl:shadow-none p-4 space-y-2 z-30 border-b border-muted-sage/15 xl:border-b-0`}>
             <a
               href="#inventory"
               onClick={() => setIsMenuOpen(false)}
@@ -484,7 +484,7 @@ export default function AdminDashboard() {
             </Link>
             <button
               onClick={handleLogout}
-              className="md:hidden flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-muted-sage hover:bg-white/5 hover:text-pure-white font-medium transition-colors cursor-pointer"
+              className="xl:hidden flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-muted-sage hover:bg-white/5 hover:text-pure-white font-medium transition-colors cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* User Info & Logout (Desktop Only) */}
-        <div className="p-4 border-t border-muted-sage/15 bg-black/10 hidden md:flex items-center justify-between">
+        <div className="p-4 border-t border-muted-sage/15 bg-black/10 hidden xl:flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-full bg-earthy-mauve/25 overflow-hidden">
               <img
@@ -522,7 +522,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* B. Main Area */}
-      <main className="flex-1 p-6 md:p-10 flex flex-col pb-24">
+      <main className="flex-1 w-full min-w-0 p-4 sm:p-6 xl:p-10 flex flex-col pb-24">
         
         {/* Top Header */}
         <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -543,10 +543,10 @@ export default function AdminDashboard() {
         </header>
 
         {/* Layout Grid (Form & Live Preview) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-10">
           
           {/* 1. Left: Product Form (Column Span: 7) */}
-          <div className="lg:col-span-7 bg-pure-white border border-muted-sage/20 rounded-2xl p-6 shadow-xs">
+          <div className="xl:col-span-7 bg-pure-white border border-muted-sage/20 rounded-2xl p-6 shadow-xs">
             <form onSubmit={handleSave} className="space-y-5">
               
               {/* Platform Select */}
@@ -757,8 +757,8 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          {/* 2. Right: Smartphone Mockup Live Preview (Column Span: 5) */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-start">
+          {/* 2. Right: Smartphone Mockup Live Preview (Always visible on all screens) */}
+          <div className="xl:col-span-5 flex flex-col items-center justify-start bg-pure-white border border-muted-sage/20 rounded-2xl p-6 shadow-xs xl:bg-transparent xl:border-0 xl:p-0 xl:shadow-none">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-sage mb-3 self-start pl-1">
               Live Preview
             </h3>
