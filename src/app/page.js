@@ -30,6 +30,13 @@ function ProductCard({ product, parseProductTitle }) {
         <div className="absolute top-3 left-3 bg-pure-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[9px] font-extrabold text-earthy-mauve shadow-xs uppercase">
           {product.platform === "EBOOK" ? "Book" : product.platform}
         </div>
+        {/* Overlay Pinned badge */}
+        {product.is_pinned && (
+          <div className="absolute top-3 right-3 bg-amber-500/95 backdrop-blur-xs text-pure-white px-2 py-0.5 rounded-md text-[9px] font-extrabold shadow-md flex items-center gap-1 uppercase tracking-wider">
+            <span>📌</span>
+            <span>Disematkan</span>
+          </div>
+        )}
       </div>
 
       {/* Content Area */}
@@ -156,12 +163,19 @@ export default function Home() {
     return matchesCategory && matchesSearch;
   });
 
+  // Sort products so pinned items (is_pinned: true) appear AT THE VERY TOP
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
+    return 0; // retain existing created_at date ordering
+  });
+
   // Pagination Logic
-  const totalItems = filteredProducts.length;
+  const totalItems = sortedProducts.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+  const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f0f4f5] text-dark-slate font-rubik">

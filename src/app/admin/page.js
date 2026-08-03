@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [editingProduct, setEditingProduct] = useState(null);
+  const [isPinned, setIsPinned] = useState(false);
 
   // Category States & Helpers
   const DEFAULT_CATEGORIES = ["Gamis", "Hijab", "Tas", "Rok", "Tunik", "Kemeja", "Alat Masak", "Bumbu Masak", "Lainnya"];
@@ -83,6 +84,7 @@ export default function AdminDashboard() {
     setShowNewCategoryInput(false);
     setLinkUrl(product.redirect_url);
     setImageUrl(product.image_url === "/default_preview.jpg" ? "" : product.image_url);
+    setIsPinned(product.is_pinned || false);
     
     // Scroll smoothly to form section on top
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -173,7 +175,8 @@ export default function AdminDashboard() {
             title: formattedTitle,
             image_url: imgUrl,
             redirect_url: linkUrl,
-            is_active: editingProduct.is_active
+            is_active: editingProduct.is_active,
+            is_pinned: isPinned
           };
 
           const { data, error } = await supabase
@@ -197,6 +200,7 @@ export default function AdminDashboard() {
             setNewCategoryInput("");
             setShowNewCategoryInput(false);
             setEditingProduct(null);
+            setIsPinned(false);
           }
         } else {
           // INSERT MODE
@@ -206,7 +210,8 @@ export default function AdminDashboard() {
             title: formattedTitle,
             image_url: imgUrl,
             redirect_url: linkUrl,
-            is_active: true
+            is_active: true,
+            is_pinned: isPinned
           };
 
           const { data, error } = await supabase
@@ -228,6 +233,7 @@ export default function AdminDashboard() {
             setCategory("Gamis");
             setNewCategoryInput("");
             setShowNewCategoryInput(false);
+            setIsPinned(false);
           }
         }
       } catch (err) {
@@ -248,7 +254,8 @@ export default function AdminDashboard() {
             product_code: productCode.toUpperCase(),
             title: formattedTitle,
             image_url: imgUrl,
-            redirect_url: linkUrl
+            redirect_url: linkUrl,
+            is_pinned: isPinned
           };
 
           setProducts(products.map((p) => (p.id === editingProduct.id ? updatedProduct : p)));
@@ -272,6 +279,7 @@ export default function AdminDashboard() {
             image_url: imgUrl,
             redirect_url: linkUrl,
             is_active: true,
+            is_pinned: isPinned,
             created_at: new Date().toISOString()
           };
 
@@ -285,6 +293,7 @@ export default function AdminDashboard() {
           setCategory("Gamis");
           setNewCategoryInput("");
           setShowNewCategoryInput(false);
+          setIsPinned(false);
         }
         setIsSubmitting(false);
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -327,6 +336,43 @@ export default function AdminDashboard() {
     setNewCategoryInput("");
     setShowNewCategoryInput(false);
     setEditingProduct(null);
+    setIsPinned(false);
+  };
+
+  // Toggle Pin/Unpin product action
+  const handleTogglePin = async (product) => {
+    const newPinnedStatus = !product.is_pinned;
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .update({ is_pinned: newPinnedStatus })
+          .eq("id", product.id)
+          .select();
+
+        if (error) throw error;
+
+        if (data && data[0]) {
+          setProducts(products.map((p) => (p.id === product.id ? data[0] : p)));
+        } else {
+          setProducts(products.map((p) => (p.id === product.id ? { ...p, is_pinned: newPinnedStatus } : p)));
+        }
+      } catch (err) {
+        console.error("Error toggling pin in Supabase:", err);
+        // Fallback local update
+        setProducts(products.map((p) => (p.id === product.id ? { ...p, is_pinned: newPinnedStatus } : p)));
+      }
+    } else {
+      setProducts(products.map((p) => (p.id === product.id ? { ...p, is_pinned: newPinnedStatus } : p)));
+    }
+
+    setSuccessMessage(
+      newPinnedStatus
+        ? `Produk "${product.product_code}" berhasil disematkan ke paling atas!`
+        : `Sematkan produk "${product.product_code}" dibatalkan.`
+    );
+    setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -663,6 +709,26 @@ export default function AdminDashboard() {
                 </label>
               </div>
 
+              {/* Pin Product Option */}
+              <div className="pt-1">
+                <label className="flex items-center space-x-3 p-3.5 bg-[#fbfcfc] border border-muted-sage/35 rounded-xl cursor-pointer hover:border-earthy-mauve/50 custom-transition select-none">
+                  <input
+                    type="checkbox"
+                    checked={isPinned}
+                    onChange={(e) => setIsPinned(e.target.checked)}
+                    className="w-4 h-4 text-earthy-mauve rounded border-muted-sage/40 focus:ring-earthy-mauve cursor-pointer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-dark-slate flex items-center gap-1.5">
+                      <span>📌</span> Sematkan Produk (Tampilkan di Paling Atas)
+                    </span>
+                    <span className="text-[10px] text-muted-sage mt-0.5">
+                      Produk ini akan selalu diutamakan dan muncul di urutan paling atas katalog.
+                    </span>
+                  </div>
+                </label>
+              </div>
+
               {/* Form Actions */}
               <div className="flex space-x-3 pt-3">
                 <button
@@ -732,6 +798,11 @@ export default function AdminDashboard() {
                     <div className="absolute top-2 left-2 bg-pure-white/95 px-1.5 py-0.5 rounded-sm text-[7px] font-extrabold text-earthy-mauve uppercase">
                       {platform}
                     </div>
+                    {isPinned && (
+                      <div className="absolute top-2 right-2 bg-amber-500 text-pure-white px-1.5 py-0.5 rounded-sm text-[7px] font-extrabold uppercase flex items-center gap-0.5 shadow-xs">
+                        📌 Semat
+                      </div>
+                    )}
                   </div>
 
                   {/* Description area inside preview */}
@@ -798,75 +869,102 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-muted-sage/5">
-                {products.map((p) => {
-                  const { category: parsedCat, cleanTitle } = parseProductTitle(p.title);
-                  return (
-                    <tr key={p.id} className="hover:bg-neutral-50/30 custom-transition text-xs">
-                      {/* Title and Thumbnail */}
-                      <td className="py-3 px-6 flex items-center space-x-3">
-                        <div className="w-9 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-muted-sage/10">
-                          <img src={p.image_url} alt={cleanTitle} className="w-full h-full object-cover" />
-                        </div>
-                        <span className="font-semibold text-dark-slate line-clamp-1 max-w-[200px]">{cleanTitle}</span>
-                      </td>
-                      
-                      {/* Category Badge */}
-                      <td className="py-3 px-6">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-muted-sage/10 text-muted-sage border border-muted-sage/25">
-                          {parsedCat}
-                        </span>
-                      </td>
+                {[...products]
+                  .sort((a, b) => {
+                    if (a.is_pinned && !b.is_pinned) return -1;
+                    if (!a.is_pinned && b.is_pinned) return 1;
+                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                  })
+                  .map((p) => {
+                    const { category: parsedCat, cleanTitle } = parseProductTitle(p.title);
+                    return (
+                      <tr key={p.id} className={`hover:bg-neutral-50/30 custom-transition text-xs ${p.is_pinned ? "bg-amber-50/30" : ""}`}>
+                        {/* Title and Thumbnail */}
+                        <td className="py-3 px-6 flex items-center space-x-3">
+                          <div className="w-9 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-muted-sage/10 relative">
+                            <img src={p.image_url} alt={cleanTitle} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="font-semibold text-dark-slate line-clamp-1 max-w-[200px]">{cleanTitle}</span>
+                              {p.is_pinned && (
+                                <span className="shrink-0 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-amber-200 shadow-2xs">
+                                  📌 Disematkan
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        
+                        {/* Category Badge */}
+                        <td className="py-3 px-6">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-muted-sage/10 text-muted-sage border border-muted-sage/25">
+                            {parsedCat}
+                          </span>
+                        </td>
 
-                      {/* Platform Badge */}
-                      <td className="py-3 px-6">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase ${
-                            p.platform === "SHOPEE"
-                              ? "bg-orange-50 text-orange-700 border border-orange-100"
-                              : p.platform === "TIKTOK"
-                              ? "bg-zinc-100 text-zinc-900 border border-zinc-200"
-                              : "bg-purple-50 text-purple-700 border border-purple-100"
-                          }`}
-                        >
-                          {p.platform === "EBOOK" ? "E-Book" : p.platform}
-                        </span>
-                      </td>
+                        {/* Platform Badge */}
+                        <td className="py-3 px-6">
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase ${
+                              p.platform === "SHOPEE"
+                                ? "bg-orange-50 text-orange-700 border border-orange-100"
+                                : p.platform === "TIKTOK"
+                                ? "bg-zinc-100 text-zinc-900 border border-zinc-200"
+                                : "bg-purple-50 text-purple-700 border border-purple-100"
+                            }`}
+                          >
+                            {p.platform === "EBOOK" ? "E-Book" : p.platform}
+                          </span>
+                        </td>
 
-                      {/* Code */}
-                      <td className="py-3 px-6 font-roboto-mono font-bold text-earthy-mauve">
-                        {p.product_code}
-                      </td>
+                        {/* Code */}
+                        <td className="py-3 px-6 font-roboto-mono font-bold text-earthy-mauve">
+                          {p.product_code}
+                        </td>
 
-                      {/* Redirect URL link */}
-                      <td className="py-3 px-6 font-roboto-mono text-muted-sage max-w-[200px] truncate">
-                        <a
-                          href={p.redirect_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline hover:text-earthy-mauve"
-                        >
-                          {p.redirect_url}
-                        </a>
-                      </td>
+                        {/* Redirect URL link */}
+                        <td className="py-3 px-6 font-roboto-mono text-muted-sage max-w-[200px] truncate">
+                          <a
+                            href={p.redirect_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline hover:text-earthy-mauve"
+                          >
+                            {p.redirect_url}
+                          </a>
+                        </td>
 
-                      {/* Actions */}
-                      <td className="py-3 px-6 text-right space-x-3">
-                        <button
-                          onClick={() => handleEdit(p)}
-                          className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p.id)}
-                          className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
-                        >
-                          Hapus
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        {/* Actions */}
+                        <td className="py-3 px-6 text-right space-x-3">
+                          <button
+                            onClick={() => handleTogglePin(p)}
+                            title={p.is_pinned ? "Batal sematkan produk ini" : "Sematkan produk ini ke paling atas"}
+                            className={`font-bold custom-transition cursor-pointer inline-flex items-center gap-1 ${
+                              p.is_pinned
+                                ? "text-amber-600 hover:text-amber-800 hover:underline"
+                                : "text-muted-sage hover:text-dark-slate hover:underline"
+                            }`}
+                          >
+                            <span>📌</span>
+                            <span>{p.is_pinned ? "Batal Semat" : "Sematkan"}</span>
+                          </button>
+                          <button
+                            onClick={() => handleEdit(p)}
+                            className="font-bold text-earthy-mauve hover:text-dark-slate hover:underline custom-transition cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            className="font-bold text-red-500 hover:text-red-700 hover:underline custom-transition cursor-pointer"
+                          >
+                            Hapus
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
