@@ -5,7 +5,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 
-**Seestar Corner** (Kakila Web) adalah platform *micro-site* dan *link aggregator* modern yang dirancang khusus untuk mempermudah audiens media sosial menemukan produk afiliasi (**Shopee**, **TikTok Shop**) serta produk digital (**E-Book**). 
+**Seestar Corner** adalah platform *micro-site* dan *link aggregator* modern yang dirancang khusus untuk mempermudah audiens media sosial menemukan produk afiliasi (**Shopee**, **TikTok Shop**) serta produk digital (**E-Book**). 
 
 Website ini mengombinasikan kesederhanaan tampilan ala *Linktree* pada fase awal dengan kecanggihan **Katalog Produk Interaktif** yang dilengkapi pencarian kode produk instan, penyaringan kategori dinamis, serta **Admin Dashboard** mandiri untuk manajemen produk secara *real-time*.
 
