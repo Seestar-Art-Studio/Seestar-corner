@@ -98,7 +98,7 @@ Halaman pengelola terisolasi untuk manajemen katalog produk tanpa perlu membuka 
 
 ---
 
-## 📂 Struktur Direktori
+## 📂 Struktur Direktori.
 
 ```text
 seestar-corner/
